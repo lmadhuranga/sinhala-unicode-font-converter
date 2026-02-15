@@ -1,0 +1,28 @@
+{
+  "manifest_version": 3,
+  "name": "Sinhala Selection Converter",
+  "version": "0.1.0",
+  "description": "Convert selected Singlish text to Sinhala Unicode via right-click.",
+  "permissions": ["contextMenus"],
+  "action": {
+    "default_title": "Sinhala Converter"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "commands": {
+    "open-converter": {
+      "suggested_key": {
+        "default": "Shift+Alt+S"
+      },
+      "description": "Open Sinhala converter"
+    }
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["converter.js", "content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}
