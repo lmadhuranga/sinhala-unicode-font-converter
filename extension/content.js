@@ -1,5 +1,6 @@
 (function () {
   const HISTORY_KEY = "sinhala_converter_history";
+  const DRAFT_KEY = "sinhala_converter_draft";
   const HISTORY_LIMIT = 50;
 
   function loadHistory() {
@@ -14,6 +15,23 @@
   function saveHistory(items) {
     try {
       localStorage.setItem(HISTORY_KEY, JSON.stringify(items));
+    } catch (_) {
+      // ignore
+    }
+  }
+
+  function loadDraft() {
+    try {
+      const raw = localStorage.getItem(DRAFT_KEY);
+      return raw ? JSON.parse(raw) : null;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  function saveDraft(draft) {
+    try {
+      localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
     } catch (_) {
       // ignore
     }
@@ -145,7 +163,11 @@
     const copyBtn = modal.querySelector(".sc-copy");
 
     const history = loadHistory();
-    const initialText = source || (history.length ? history[history.length - 1].source : "");
+    const draft = loadDraft();
+    const initialText =
+      source ||
+      (draft && draft.source ? draft.source : "") ||
+      (history.length ? history[history.length - 1].source : "");
 
     input.value = initialText;
     output.value = convert(initialText);
@@ -153,6 +175,11 @@
 
     input.oninput = () => {
       output.value = convert(input.value);
+      saveDraft({
+        source: input.value,
+        converted: output.value,
+        ts: Date.now()
+      });
     };
 
     copyBtn.onclick = () => {
@@ -168,5 +195,11 @@
         ts: Date.now()
       });
     }
+
+    saveDraft({
+      source: input.value,
+      converted: output.value,
+      ts: Date.now()
+    });
   });
 })();
