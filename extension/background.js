@@ -12,6 +12,19 @@ function sendOpenModal(tabId, callback) {
   });
 }
 
+function sendConvertSelection(tabId, selectionText, callback) {
+  chrome.tabs.sendMessage(
+    tabId,
+    {
+      type: "convert-selection",
+      selectionText
+    },
+    () => {
+      callback(chrome.runtime.lastError || null);
+    }
+  );
+}
+
 function injectConverterAndOpen(tabId) {
   chrome.scripting.executeScript(
     {
@@ -59,15 +72,28 @@ chrome.commands.onCommand.addListener((command) => {
 chrome.contextMenus.onClicked.addListener((info, tab) => {
   if (info.menuItemId !== "convert-sinhala" || !tab?.id) return;
 
-  chrome.tabs.sendMessage(
-    tab.id,
-    {
-      type: "convert-selection",
-      selectionText: info.selectionText || ""
-    },
-    () => {
-      // Ignore errors when content script is not available on the page.
-      void chrome.runtime.lastError;
-    }
-  );
+  const selectionText = info.selectionText || "";
+  sendConvertSelection(tab.id, selectionText, (error) => {
+    if (!error) return;
+
+    const message = String(error.message || "");
+    if (!message.includes("Receiving end does not exist")) return;
+
+    chrome.scripting.executeScript(
+      {
+        target: { tabId: tab.id },
+        files: ["converter.js", "content.js"]
+      },
+      () => {
+        if (chrome.runtime.lastError) {
+          // Restricted pages (chrome://, extensions, store) cannot be scripted.
+          return;
+        }
+
+        sendConvertSelection(tab.id, selectionText, () => {
+          void chrome.runtime.lastError;
+        });
+      }
+    );
+  });
 });
