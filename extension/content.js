@@ -37,6 +37,14 @@
     }
   }
 
+  function clearDraft() {
+    try {
+      localStorage.removeItem(DRAFT_KEY);
+    } catch (_) {
+      // ignore
+    }
+  }
+
   function pushHistory(entry) {
     const items = loadHistory();
     items.push(entry);
@@ -97,16 +105,21 @@
           <button class="sc-close" aria-label="Close">×</button>
         </div>
         <div class="sc-body">
-          <label class="sc-label" for="sc-input">Input (Singlish)</label>
+          <div class="sc-input-row">
+            <label class="sc-label" for="sc-input">Input (Singlish)</label>
+            <button class="sc-clear" aria-label="Clear text" title="Clear">Clear</button>
+          </div>
           <textarea id="sc-input" class="sc-textarea" rows="4"></textarea>
 
           <div class="sc-output-row">
             <label class="sc-label" for="sc-output">Unicode Output</label>
-            <button class="sc-copy" aria-label="Copy Unicode" title="Copy">
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M16 1H6a2 2 0 0 0-2 2v12h2V3h10V1zm3 4H10a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2zm0 16H10V7h9v14z"/>
-              </svg>
-            </button>
+            <div class="sc-actions">
+              <button class="sc-copy" aria-label="Copy Unicode" title="Copy">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M16 1H6a2 2 0 0 0-2 2v12h2V3h10V1zm3 4H10a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2zm0 16H10V7h9v14z"/>
+                </svg>
+              </button>
+            </div>
           </div>
           <textarea id="sc-output" class="sc-textarea sc-output" rows="4" readonly></textarea>
         </div>
@@ -122,12 +135,16 @@
       #sinhala-converter-modal .sc-title { font-size: 16px; font-weight: 700; color: #f1f5f9; }
       #sinhala-converter-modal .sc-close { border: 1px solid rgba(255,255,255,0.1); background: #1a1f2a; color: #e2e8f0; font-size: 18px; cursor: pointer; line-height: 1; padding: 4px 8px; border-radius: 8px; }
       #sinhala-converter-modal .sc-body { display: flex; flex-direction: column; gap: 10px; }
+      #sinhala-converter-modal .sc-input-row { display: flex; align-items: center; justify-content: space-between; }
       #sinhala-converter-modal .sc-label { font-size: 12px; font-weight: 600; color: #cbd5f5; }
       #sinhala-converter-modal .sc-textarea { width: 100%; border: 1px solid #2a3344; border-radius: 8px; padding: 8px; font-size: 14px; resize: vertical; background: #0b0f16; color: #e2e8f0; }
       #sinhala-converter-modal .sc-output { background: #0f141d; }
       #sinhala-converter-modal .sc-output-row { display: flex; align-items: center; justify-content: space-between; }
+      #sinhala-converter-modal .sc-actions { display: inline-flex; align-items: center; gap: 8px; }
+      #sinhala-converter-modal .sc-clear { border: 1px solid #2a3344; background: #141a24; color: #cbd5f5; border-radius: 8px; padding: 6px 10px; cursor: pointer; font-size: 12px; }
       #sinhala-converter-modal .sc-copy { border: 1px solid #2a3344; background: #141a24; border-radius: 8px; padding: 6px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
       #sinhala-converter-modal .sc-copy svg { width: 16px; height: 16px; fill: #cbd5f5; }
+      #sinhala-converter-modal .sc-clear:hover { background: #1b2331; }
       #sinhala-converter-modal .sc-copy:hover { background: #1b2331; }
       #sinhala-converter-modal .sc-close:hover { background: #22293a; }
       @media (max-width: 680px) {
@@ -172,6 +189,7 @@
     const modal = ensureModal();
     const input = modal.querySelector("#sc-input");
     const output = modal.querySelector("#sc-output");
+    const clearBtn = modal.querySelector(".sc-clear");
     const copyBtn = modal.querySelector(".sc-copy");
 
     const history = loadHistory();
@@ -198,6 +216,13 @@
       copyToClipboard(output.value).then((ok) => {
         showToast(ok ? "Unicode copied" : "Copy failed");
       });
+    };
+
+    clearBtn.onclick = () => {
+      input.value = "";
+      output.value = "";
+      clearDraft();
+      input.focus();
     };
 
     if (source) {
