@@ -140,7 +140,19 @@
 
     const closeBtn = modal.querySelector(".sc-close");
     const backdrop = modal.querySelector(".sc-backdrop");
-    const close = () => modal.remove();
+    const onKeyDown = (event) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        close();
+      }
+    };
+    const close = () => {
+      document.removeEventListener("keydown", onKeyDown);
+      if (modal.isConnected) {
+        modal.remove();
+      }
+    };
+    document.addEventListener("keydown", onKeyDown);
     closeBtn.addEventListener("click", close);
     backdrop.addEventListener("click", close);
 
